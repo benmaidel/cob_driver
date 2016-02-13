@@ -97,6 +97,6 @@ void ColorOSim::setColorMulti(std::vector<color::rgba> &colors)
     colorMsg.colors.push_back(color);
   }
 
-  _pubSimulation.publish(colorMsg);
+  _pubSimulationMulti.publish(colorMsg);
   m_sigColorSet(colors[0]);
 }
