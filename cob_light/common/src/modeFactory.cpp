@@ -62,6 +62,7 @@
 #include <circleColorMode.h>
 #include <sweepColorMode.h>
 #include <distApproxMode.h>
+#include <glowColorMode.h>
 
 ModeFactory::ModeFactory()
 {
@@ -174,6 +175,11 @@ Mode* ModeFactory::create(cob_light::LightMode requestMode, IColorO* colorO)
         mode = new DistApproxMode(colorO->getNumLeds(), requestMode.priority, requestMode.frequency, requestMode.pulses, requestMode.timeout);
         break;
 
+    case cob_light::LightModes::GLOW:
+        mode.reset(new GlowColorMode(color, requestMode.priority, requestMode.frequency,
+                                    requestMode.pulses, requestMode.timeout));
+        break;
+
     default:
         mode = NULL;
     }
@@ -237,7 +243,13 @@ int ModeFactory::type(Mode *mode)
     else if(dynamic_cast<SweepColorMode*>(mode) != NULL)
         ret = cob_light::LightMode::SWEEP;
     else if(dynamic_cast<DistApproxMode*>(mode) != NULL)
+<<<<<<< Updated upstream
         ret = cob_light::LightMode::DIST_APPROX;
+=======
+        ret = cob_light::LightModes::DIST_APPROX;
+    else if(dynamic_cast<GlowColorMode*>(mode) != NULL)
+        ret = cob_light::LightModes::GLOW;
+>>>>>>> Stashed changes
     else
         ret = cob_light::LightMode::NONE;
 
