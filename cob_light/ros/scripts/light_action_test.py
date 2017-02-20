@@ -9,6 +9,7 @@ from cob_light.msg import *
 from cob_light.srv import SetLightMode
 from cob_light.srv import SetLightModeRequest
 from cob_light.srv import SetLightModeResponse
+from cob_light.srv import StopLightMode
 
 from std_msgs.msg import ColorRGBA
 
