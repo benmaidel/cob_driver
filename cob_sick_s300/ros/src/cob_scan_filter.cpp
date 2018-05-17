@@ -21,6 +21,7 @@
 // standard includes
 #include <vector>
 #include <algorithm>
+#include <limits>
 
 // ROS includes
 #include <ros/ros.h>
@@ -85,7 +86,7 @@ public:
 			}
 
 			for(int u = stop_scan; u<start_scan; u++) {
-				laser_scan.ranges.at(u) = 0.0; //laser_scan.range_min;
+				laser_scan.ranges.at(u) = std::numeric_limits<double>::infinity();//0.0; //laser_scan.range_min;
 			}
 
 			if( it->at(1) >= laser_scan.angle_max ) stop_scan = num_scans-1;
@@ -96,7 +97,7 @@ public:
 		}
 
 		for(unsigned int u = stop_scan; u<laser_scan.ranges.size(); u++) {
-			laser_scan.ranges.at(u) = 0.0; //laser_scan.range_min;
+			laser_scan.ranges.at(u) = std::numeric_limits<double>::infinity(); //0.0; //laser_scan.range_min;
 		}
 
 		// publish message
