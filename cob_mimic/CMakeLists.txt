@@ -28,6 +28,10 @@ add_executable(mimic src/mimic_node.cpp)
 add_dependencies(mimic ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(mimic ${catkin_LIBRARIES} ${libvlc_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable(test_vlc test/multi_thread_vlc.cpp)
+add_dependencies(test_vlc ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(test_vlc ${catkin_LIBRARIES} ${libvlc_LIBRARIES} ${Boost_LIBRARIES})
+
 ### INSTALL ###
 install(TARGETS mimic
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
