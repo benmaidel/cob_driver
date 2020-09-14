@@ -18,8 +18,8 @@ public:
 
 	auto getAcceleration(int index) -> double;
 	auto setAcceleration(int index, double acceleration) -> void;
+	auto getAccelerationMax(int index) -> double;
 	auto getAccelerationMin(int index) -> double;
-	auto getAccelerationMax(itn index) -> double;
 
 	auto getCurrent(int index) -> double;
 
@@ -61,9 +61,7 @@ protected:
 	virtual int inputChangeHandler(int index, int inputState);
 	virtual int encoderPositionChangeHandler(int index, int time, int positionChange);
 	virtual int encoderPositionUpdateHandler(int index, int positionChange);
-
 	virtual int backEMFUpdateHandler(int index, double voltage);
-
 	virtual int sensorUpdateHandler(int index, int sensorValue);
 	virtual int currentUpdateHandler(int index, double current);
 
@@ -72,25 +70,18 @@ private:
 
 	static auto velocityChangeDelegate(CPhidgetMotorControlHandle phid,
 			void *userPtr, int index, double velocity) -> int;
-
 	static auto currentChangeDelegate(CPhidgetMotorControlHandle phid,
 			void *userPtr, int index, double current) -> int;
-
 	static auto inputChangeDelegate(CPhidgetMotorControlHandle phid,
 			void *userPtr, int index, int inputState) -> int;
-
 	static auto encoderPositionChangeDelegate(CPhidgetMotorControlHandle phid,
 			void *userPtr, int index, int time, int positionChange) -> int;
-
 	static auto encoderPositionUpdateDelegate(CPhidgetMotorControlHandle phid,
 			void *userPtr, int index, int positionChange) -> int;
-
 	static auto backEMFUpdateDelegate(CPhidgetMotorControlHandle phid,
-			void *userPtr, int index, int positionChange) -> int;
-
+			void *userPtr, int index, double voltage) -> int;
 	static auto sensorUpdateDelegate(CPhidgetMotorControlHandle phid,
 			void *userPtr, int index, int sensorValue) -> int;
-
 	static auto currentUpdateDelegate(CPhidgetMotorControlHandle phid,
 			void *userPtr, int index, double current) -> int;
 };
