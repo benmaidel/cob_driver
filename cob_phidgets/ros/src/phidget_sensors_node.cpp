@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 
 #include <ros/ros.h>
 #include <cob_phidgets/phidget_manager.h>
 #include <cob_phidgets/phidgetik_ros.h>
+#include <cob_phidgets/phidget_motor_ros.h>
 
 int main(int argc, char **argv)
 {
@@ -73,15 +74,15 @@ int main(int argc, char **argv)
 	delete manager;
 
 	//set the update method
-	PhidgetIK::SensingMode sensMode;
+	Phidget::SensingMode sensMode;
 	if(update_mode == "event")
-		sensMode = PhidgetIK::SensingMode::EVENT;
+		sensMode = Phidget::SensingMode::EVENT;
 	else if(update_mode == "polling")
-		sensMode = PhidgetIK::SensingMode::POLLING;
+		sensMode = Phidget::SensingMode::POLLING;
 	else
 	{
 		ROS_WARN("Unknown update mode '%s' use polling instead", update_mode.c_str());
-		sensMode = PhidgetIK::SensingMode::POLLING;
+		sensMode = Phidget::SensingMode::POLLING;
 	}
 
 	//if no devices attached exit
@@ -101,15 +102,28 @@ int main(int argc, char **argv)
 				std::stringstream ss; ss << device.serial_num;
 				name = ss.str();
 			}
-			phidgets.push_back(
-				std::make_shared<PhidgetIKROS>(nodeHandle, device.serial_num, name, sensors_param, sensMode));
+			switch(device.device_class) {
+				case CPhidget_DeviceClass::PHIDCLASS_INTERFACEKIT:
+					phidgets.push_back(
+						std::make_shared<PhidgetIKROS>(nodeHandle, device.serial_num, name, sensors_param, sensMode));
+					break;
+				case CPhidget_DeviceClass::PHIDCLASS_MOTORCONTROL:
+					phidgets.push_back(
+						std::make_shared<PhidgetMotorROS>(nodeHandle, device.serial_num, name, sensors_param, sensMode));
+					break;
+				default:
+					ROS_WARN("Unsupported Phidget device with class: %d, name: %s, type: %s, serial_num: %d. Ignoring device."
+						, device.device_class, device.name, device.type, device.serial_num);
+					break;
+			}
+
 		}
 
 		ros::Rate loop_rate(freq);
 		while (ros::ok())
 		{
 			//update devices if update method is polling
-			if(sensMode == PhidgetIK::SensingMode::POLLING)
+			if(sensMode == Phidget::SensingMode::POLLING)
 			{
 				for(auto& phidget : phidgets)
 				{

@@ -24,8 +24,10 @@
 
 struct AttachedDevice
 {
+	int device_class;
 	int serial_num;
 	std::string name;
+	std::string type;
 };
 
 class PhidgetManager

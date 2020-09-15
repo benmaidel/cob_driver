@@ -46,16 +46,20 @@ auto PhidgetManager::getAttachedDevices()-> std::vector<AttachedDevice>
 	CPhidgetManager_getAttachedDevices((CPhidgetManagerHandle) _manHandle, &phidgetList, &count);
 
  	std::vector<AttachedDevice> attachedDevices;
+	CPhidget_DeviceClass deviceClass;
 	int serialNumber;
 	const char *name;
+	const char *type;
 
 	// Iterate over the returned Phidget data
 	for (int i = 0; i < count; i++) {
 		CPhidget_getDeviceName(phidgetList[i], &name);
 		CPhidget_getSerialNumber(phidgetList[i], &serialNumber);
-		ROS_INFO("Found %s, with serial: %d", name, serialNumber);
+		CPhidget_getDeviceClass(phidgetList[i], &deviceClass);
+		CPhidget_getDeviceType(phidgetList[i], &type);
+		ROS_INFO("Found %s, with device class: %d and serial: %d", name, (int)deviceClass, serialNumber);
 		// Store name and serial number into a persistent variable
-		AttachedDevice device{serialNumber, name};
+		AttachedDevice device{(int)deviceClass, serialNumber, name, type};
 		attachedDevices.push_back(device);
 	}
 

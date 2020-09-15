@@ -31,7 +31,7 @@ public:
 	auto setEncoderPosition(int index, int position) ->void;
 
 	auto getBackEMFSensingState(int index) -> int;
-	auto setBackEMFSensingSTate(int index, int bEMFState) -> void;
+	auto setBackEMFSensingState(int index, int bEMFState) -> void;
 	auto getBackEMF(int index) -> double;
 
 	auto getSupplyVoltage() -> double;
@@ -67,6 +67,7 @@ protected:
 
 private:
 	static auto attachDelegate(CPhidgetHandle phid, void *userptr) -> int;
+	static auto detachDelegate(CPhidgetHandle phid, void *userptr) -> int;
 
 	static auto velocityChangeDelegate(CPhidgetMotorControlHandle phid,
 			void *userPtr, int index, double velocity) -> int;

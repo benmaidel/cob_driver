@@ -9,6 +9,9 @@ PhidgetMotor::PhidgetMotor(SensingMode mode)
 		CPhidget_set_OnAttach_Handler((CPhidgetHandle) _motorHandle,
 				PhidgetMotor::attachDelegate, this);
 
+		CPhidget_set_OnDetach_Handler((CPhidgetHandle) _motorHandle,
+				PhidgetMotor::detachDelegate, this);
+
 		if(_sensMode == SensingMode::EVENT)
 		{
 			_last_error = CPhidgetMotorControl_set_OnVelocityChange_Handler(_motorHandle,
@@ -61,7 +64,7 @@ auto PhidgetMotor::getVelocity(int index) -> double
 {
 	double velocity = -1;
 
-	_last_error = CPhidgetMotorControl_getVelocity(_motorHandle, &velocity);
+	_last_error = CPhidgetMotorControl_getVelocity(_motorHandle, index, &velocity);
 
 	return velocity;
 }
@@ -77,7 +80,7 @@ auto PhidgetMotor::getAcceleration(int index) -> double
 {
 	double acceleration = -1;
 
-	_last_error = CPhidgetMotorControl_getAcceleration(_motorHandle, &acceleration);
+	_last_error = CPhidgetMotorControl_getAcceleration(_motorHandle, index, &acceleration);
 
 	return acceleration;
 }
@@ -93,7 +96,7 @@ auto PhidgetMotor::getAccelerationMax(int index) -> double
 {
 	double acceleration_max = -1;
 
-	_last_error = CPhidgetMotorControl_getAccelerationMax(_motorHandle, &acceleration_max);
+	_last_error = CPhidgetMotorControl_getAccelerationMax(_motorHandle, index, &acceleration_max);
 
 	return acceleration_max;
 }
@@ -102,7 +105,7 @@ auto PhidgetMotor::getAccelerationMin(int index) -> double
 {
 	double acceleration_min = -1;
 
-	_last_error = CPhidgetMotorControl_getAccelerationMin(_motorHandle, &acceleration_min);
+	_last_error = CPhidgetMotorControl_getAccelerationMin(_motorHandle, index, &acceleration_min);
 
 	return acceleration_min;
 }
@@ -111,7 +114,7 @@ auto PhidgetMotor::getCurrent(int index) -> double
 {
 	double current = -1;
 
-	_last_error = CPhidgetMotorControl_getCurrent(_motorHandle, &current);
+	_last_error = CPhidgetMotorControl_getCurrent(_motorHandle, index, &current);
 
 	return current;
 }
@@ -169,7 +172,7 @@ auto PhidgetMotor::getBackEMFSensingState(int index) -> int
 	return position;
 }
 
-auto PhidgetMotor::setBackEMFSensingSTate(int index, int bEMFState) -> void
+auto PhidgetMotor::setBackEMFSensingState(int index, int bEMFState) -> void
 {
 	 _last_error = CPhidgetMotorControl_setBackEMFSensingState(_motorHandle, index, bEMFState);
 
@@ -299,17 +302,42 @@ auto PhidgetMotor::detachHandler() -> int
     return 0;
 }
 
+auto PhidgetMotor::velocityChangeHandler(int index, double velocity) -> int
+{
+	return 0;
+}
+
+auto PhidgetMotor::currentChangeHandler(int index, double current) -> int
+{
+	return 0;
+}
+
 auto PhidgetMotor::inputChangeHandler(int index, int inputState) -> int
 {
 	return 0;
 }
 
-auto PhidgetMotor::outputChangeHandler(int index, int outputState) -> int
+auto PhidgetMotor::encoderPositionChangeHandler(int index, int time, int positionChange) -> int
 {
 	return 0;
 }
 
-auto PhidgetMotor::sensorChangeHandler(int index, int sensorValue) -> int
+auto PhidgetMotor::encoderPositionUpdateHandler(int index, int inputSpositionChangetate) -> int
+{
+	return 0;
+}
+
+auto PhidgetMotor::backEMFUpdateHandler(int index, double voltage) -> int
+{
+	return 0;
+}
+
+auto PhidgetMotor::sensorUpdateHandler(int index, int sensorValue) -> int
+{
+	return 0;
+}
+
+auto PhidgetMotor::currentUpdateHandler(int index, double current) -> int
 {
 	return 0;
 }
@@ -319,23 +347,59 @@ auto PhidgetMotor::attachDelegate(CPhidgetHandle phid, void *userptr) -> int
 	return ((PhidgetMotor*) userptr)->attachHandler();
 }
 
-auto PhidgetMotor::inputChangeDelegate(CPhidgetInterfaceKitHandle phid,
+auto PhidgetMotor::detachDelegate(CPhidgetHandle phid, void *userptr) -> int
+{
+	return ((PhidgetMotor*) userptr)->detachHandler();
+}
+
+auto PhidgetMotor::velocityChangeDelegate(CPhidgetMotorControlHandle handle,
+		void *userPtr, int index, double velocity) -> int
+{
+	return ((PhidgetMotor*) userPtr)->velocityChangeHandler(index, velocity);
+}
+
+auto PhidgetMotor::currentChangeDelegate(CPhidgetMotorControlHandle handle,
+		void *userPtr, int index, double current) -> int
+{
+	return ((PhidgetMotor*) userPtr)->currentChangeHandler(index, current);
+}
+
+auto PhidgetMotor::inputChangeDelegate(CPhidgetMotorControlHandle handle,
 		void *userPtr, int index, int inputState) -> int
 {
 	return ((PhidgetMotor*) userPtr)->inputChangeHandler(index, inputState);
 }
 
-auto PhidgetMotor::outputChangeDelegate(CPhidgetInterfaceKitHandle phid,
-		void *userPtr, int index, int outputState) -> int
+auto PhidgetMotor::encoderPositionChangeDelegate(CPhidgetMotorControlHandle handle,
+		void *userPtr, int index, int time, int positionChange) -> int
 {
-	return ((PhidgetMotor*) userPtr)->outputChangeHandler(index, outputState);
+	return ((PhidgetMotor*) userPtr)->encoderPositionChangeHandler(index, time, positionChange);
 }
 
-auto PhidgetMotor::sensorChangeDelegate(CPhidgetInterfaceKitHandle phid,
+auto PhidgetMotor::encoderPositionUpdateDelegate(CPhidgetMotorControlHandle handle,
+		void *userPtr, int index, int positionChange) -> int
+{
+	return ((PhidgetMotor*) userPtr)->encoderPositionUpdateHandler(index, positionChange);
+}
+
+auto PhidgetMotor::backEMFUpdateDelegate(CPhidgetMotorControlHandle handle,
+		void *userPtr, int index, double voltage) -> int
+{
+	return ((PhidgetMotor*) userPtr)->backEMFUpdateHandler(index, voltage);
+}
+
+auto PhidgetMotor::sensorUpdateDelegate(CPhidgetMotorControlHandle handle,
 		void *userPtr, int index, int sensorValue) -> int
 {
-	return ((PhidgetMotor*) userPtr)->sensorChangeHandler(index, sensorValue);
+	return ((PhidgetMotor*) userPtr)->sensorUpdateHandler(index, sensorValue);
 }
+
+auto PhidgetMotor::currentUpdateDelegate(CPhidgetMotorControlHandle handle,
+		void *userPtr, int index, double current) -> int
+{
+	return ((PhidgetMotor*) userPtr)->currentUpdateHandler(index, current);
+}
+
 
 auto PhidgetMotor::update()-> void
 {

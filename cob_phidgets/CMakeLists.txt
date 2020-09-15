@@ -46,9 +46,11 @@ target_link_libraries(device_name ${catkin_LIBRARIES})
 add_executable(phidget_sensors
   common/src/phidget.cpp
   common/src/phidgetik.cpp
+  common/src/phidget_motor.cpp
   ros/src/phidget_manager.cpp
   ros/src/phidget_sensors_node.cpp
-  ros/src/phidgetik_ros.cpp)
+  ros/src/phidgetik_ros.cpp
+  ros/src/phidget_motor_ros.cpp)
 add_dependencies(phidget_sensors ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(phidget_sensors ${catkin_LIBRARIES})
 
