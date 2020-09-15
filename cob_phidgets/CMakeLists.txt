@@ -10,6 +10,9 @@ add_message_files(
   FILES
   AnalogSensor.msg
   DigitalSensor.msg
+  Encoder.msg
+  Motor.msg
+  Velocity.msg
 )
 
 add_service_files(
