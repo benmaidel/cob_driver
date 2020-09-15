@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+
+	<node pkg="cob_phidgets" type="phidget_sensors" name="phidgets" cwd="node" respawn="false" output="screen">
+		<rosparam file="$(find cob_phidgets)/config/phidgets.yaml" command="load"/>
+	</node>
+
+</launch>

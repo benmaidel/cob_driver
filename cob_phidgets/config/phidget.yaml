@@ -1,0 +1,43 @@
+frequency: 30                       #nodes update frequency in hz
+update_mode: polling                #switch between poll and event driven processing [polling, event]
+
+boards:                             
+  ifk_general:                      #phidget board with a name
+    serial_num: 285651              #phidget boards serial number
+    ratiometric: true               
+    sensors:                        #configured sensors of this board
+      digital_out_name_1:
+        type: digital_out
+        index: 0
+      digital_in_name_1:
+        type: digital_in
+        index: 0
+      analog_name_1:
+        type: analog
+        index: 0
+      example_analog_full:
+        type: analog
+        index: 4
+        change_trigger: 10          #the sensors change trigger value (only event driven mode)
+        data_rate: 20               #ports data rate
+  
+  motor_controller_general:
+    serial_num: 123456
+    sensors:
+      motor_name_1:
+        type: motor
+        index: 0
+        acceleration: 1.0           #the acceleration of this motor
+        back_emf_sensing_mode: 0    #sensing mode of the back emf sensor
+        braking: 0.0
+      encoder_name_1:
+        type: encoder
+        index: 0
+        encoder_position: 0
+      digital_name_1:
+        type: digital_in
+        index: 0
+      analog_name_1:
+        type: analog
+        index: 0
+        
