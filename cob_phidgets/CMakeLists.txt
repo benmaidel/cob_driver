@@ -30,6 +30,8 @@ generate_messages(DEPENDENCIES std_msgs)
 
 catkin_package(
   CATKIN_DEPENDS message_runtime sensor_msgs std_msgs
+  INCLUDE_DIRS common/include ros/include
+  LIBRARIES phidget_sensors_lib
 )
 
 ### BUILD ###
@@ -45,20 +47,31 @@ target_link_libraries(device_name ${catkin_LIBRARIES})
 
 add_executable(phidget_sensors
   common/src/phidget.cpp
-  common/src/phidgetik.cpp
   common/src/phidget_motor.cpp
+  common/src/phidgetik.cpp
   ros/src/phidget_manager.cpp
+  ros/src/phidget_motor_ros.cpp
   ros/src/phidget_sensors_node.cpp
-  ros/src/phidgetik_ros.cpp
-  ros/src/phidget_motor_ros.cpp)
+  ros/src/phidgetik_ros.cpp)
 add_dependencies(phidget_sensors ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(phidget_sensors ${catkin_LIBRARIES})
 
+add_library(phidget_sensors_lib
+  common/src/phidget.cpp
+  common/src/phidget_motor.cpp
+  common/src/phidgetik.cpp)
+add_dependencies(phidget_sensors_lib ${catkin_EXPORTED_TARGETS})
+target_link_libraries(phidget_sensors_lib ${catkin_LIBRARIES})
+
 ### INSTALL ###
-install(TARGETS device_name phidget_sensors range_sensors
+install(TARGETS device_name phidget_sensors phidget_sensors_lib range_sensors
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY common/include/${PROJECT_NAME}/
+ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
 catkin_install_python(PROGRAMS ros/src/simulated_range_sensors.py
