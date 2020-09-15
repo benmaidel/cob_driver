@@ -17,8 +17,12 @@ add_message_files(
 
 add_service_files(
   FILES
+  SetAcceleration.srv
+  SetBackEMFSensingState.srv
+  SetBraking.srv
   SetDataRate.srv
   SetDigitalSensor.srv
+  SetEncoderPosition.srv
   SetTriggerValue.srv
 )
 

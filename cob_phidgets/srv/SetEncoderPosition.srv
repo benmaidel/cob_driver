@@ -1,0 +1,5 @@
+string uri
+int32 encoder_position
+---
+string uri
+int32 encoder_position
