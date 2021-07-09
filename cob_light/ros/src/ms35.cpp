@@ -16,7 +16,7 @@
  
 
 #include <ms35.h>
-#include <ros/ros.h>
+#include "rclcpp/rclcpp.hpp"
 #include <boost/crc.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/integer.hpp>
@@ -75,9 +75,9 @@ int MS35::sendData(const char* data, size_t len)
   bytes_wrote = _serialIO->sendData(data, len);
 
   if(bytes_wrote == -1)
-    ROS_WARN("Can not write to serial port. Port closed!");
+    RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Can not write to serial port. Port closed!");
   else
-    ROS_DEBUG("Wrote [%s] with %i bytes from %lu bytes", data, bytes_wrote, len);
+    RCLCPP_DEBUG(rclcpp::get_logger("CobLight"), "Wrote [%s] with %i bytes from %lu bytes", data, bytes_wrote, len);
 
   return bytes_wrote;
 }
@@ -113,5 +113,5 @@ void MS35::setColor(color::rgba color)
   if(sendData(buffer, PACKAGE_SIZE) == PACKAGE_SIZE)
     m_sigColorSet(color_tmp);
   else
-    ROS_ERROR("Could not write to serial port");
+    RCLCPP_ERROR(rclcpp::get_logger("CobLight"), "Could not write to serial port");
 }

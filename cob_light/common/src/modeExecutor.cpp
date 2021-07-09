@@ -16,7 +16,7 @@
 
 
 #include <modeExecutor.h>
-#include <ros/ros.h>
+#include "rclcpp/rclcpp.hpp"
 
 ModeExecutor::ModeExecutor(IColorO* colorO)
 : _stopRequested(false), default_priority(0)
@@ -29,7 +29,7 @@ ModeExecutor::~ModeExecutor()
 {
 }
 
-uint64_t ModeExecutor::execute(cob_light::LightMode requestedMode)
+uint64_t ModeExecutor::execute(cob_light::msg::LightMode requestedMode)
 {
 	boost::shared_ptr<Mode> mode = ModeFactory::create(requestedMode, _colorO);
 	// check if mode was correctly created
@@ -49,7 +49,7 @@ uint64_t ModeExecutor::execute(boost::shared_ptr<Mode> mode)
 		// check if mode with lower prio is running
 		if(_mapActiveModes.begin()->first < mode->getPriority())
 		{
-			ROS_DEBUG("Pause mode: %i with prio %i",
+			RCLCPP_DEBUG(rclcpp::get_logger("CobLight"), "Pause mode: %i with prio %i",
 				ModeFactory::type(_mapActiveModes.begin()->second.get()), _mapActiveModes.begin()->second->getPriority());
 			_mapActiveModes.begin()->second->pause();
 		}
@@ -59,7 +59,7 @@ uint64_t ModeExecutor::execute(boost::shared_ptr<Mode> mode)
 			itr = _mapActiveModes.find(mode->getPriority());
 			if(itr != _mapActiveModes.end())
 			{
-				ROS_DEBUG("Stopping mode: %i with prio %i",
+				RCLCPP_DEBUG(rclcpp::get_logger("CobLight"), "Stopping mode: %i with prio %i",
 					ModeFactory::type(itr->second.get()), itr->second->getPriority());
 				itr->second->stop();
 				_mapActiveModes.erase(itr);
@@ -70,13 +70,13 @@ uint64_t ModeExecutor::execute(boost::shared_ptr<Mode> mode)
 	mode->signalColorsReady()->connect(boost::bind(&IColorO::setColorMulti, _colorO, _1));
 	mode->signalModeFinished()->connect(boost::bind(&ModeExecutor::onModeFinishedReceived, this, _1));
 	mode->setActualColor(_activeColor);
-	ROS_DEBUG("Attaching Mode %i with prio: %i freq: %f timeout: %f pulses: %i ",
+	RCLCPP_DEBUG(rclcpp::get_logger("CobLight"), "Attaching Mode %i with prio: %i freq: %f timeout: %f pulses: %i ",
 		ModeFactory::type(mode.get()), mode->getPriority(), mode->getFrequency(), mode->getTimeout(), mode->getPulses());
 	_mapActiveModes.insert(std::pair<int, boost::shared_ptr<Mode> >(mode->getPriority(), mode));
 
 	if(!_mapActiveModes.begin()->second->isRunning())
 	{
-		ROS_DEBUG("Executing Mode %i with prio: %i freq: %f timeout: %f pulses: %i ",
+		RCLCPP_DEBUG(rclcpp::get_logger("CobLight"), "Executing Mode %i with prio: %i freq: %f timeout: %f pulses: %i ",
 			ModeFactory::type(mode.get()), mode->getPriority(), mode->getFrequency(), mode->getTimeout(), mode->getPulses());
 		_mapActiveModes.begin()->second->start();
 	}
@@ -123,7 +123,7 @@ bool ModeExecutor::stop(uint64_t uId)
 			uint64_t uid = reinterpret_cast<uint64_t>(itr->second.get());
 			if(uid == uId)
 			{
-				ROS_DEBUG("Stopping mode: %i with prio %i",
+				RCLCPP_DEBUG(rclcpp::get_logger("CobLight"), "Stopping mode: %i with prio %i",
 					ModeFactory::type(itr->second.get()), itr->second->getPriority());
 				itr->second->stop();
 				_mapActiveModes.erase(itr);
@@ -132,7 +132,7 @@ bool ModeExecutor::stop(uint64_t uId)
 				{
 					if(!_mapActiveModes.begin()->second->isRunning())
 					{
-						ROS_DEBUG("Resume mode: %i with prio %i",
+						RCLCPP_DEBUG(rclcpp::get_logger("CobLight"), "Resume mode: %i with prio %i",
 							ModeFactory::type(_mapActiveModes.begin()->second.get()), _mapActiveModes.begin()->second->getPriority());
 						_mapActiveModes.begin()->second->start();
 					}
@@ -153,7 +153,7 @@ void ModeExecutor::onModeFinishedReceived(int prio)
 		_mapActiveModes.erase(prio);
 		if(_mapActiveModes.size() > 0)
 		{
-			ROS_DEBUG("Resume mode: %i with prio %i",
+			RCLCPP_DEBUG(rclcpp::get_logger("CobLight"), "Resume mode: %i with prio %i",
 				ModeFactory::type(_mapActiveModes.begin()->second.get()), _mapActiveModes.begin()->second->getPriority());
 			_mapActiveModes.begin()->second->start();
 		}
@@ -161,7 +161,7 @@ void ModeExecutor::onModeFinishedReceived(int prio)
 	//finished mode is not the current executing one (this should never happen)
 	else
 	{
-		ROS_WARN("Mode finished which should't be executed");
+		RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Mode finished which should't be executed");
 		_mapActiveModes.erase(prio);
 	}
 }

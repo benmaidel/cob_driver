@@ -20,7 +20,7 @@
 #include <iostream>
 #include <cstring>
 
-#include <ros/ros.h>
+#include "rclcpp/rclcpp.hpp"
 
 SerialIO::SerialIO() :
 	 _fd(-1), _device_string(""), _baudrate(9600)
@@ -116,7 +116,7 @@ void SerialIO::stop()
 
 void SerialIO::run()
 {
-	ros::Rate r(maxUpdateRate);
+	rclcpp::Rate r(maxUpdateRate);
 	std::vector<ioData_t> data;
 	while(true)
 	{

@@ -22,9 +22,9 @@
 #include <algorithm>
 #include <limits>
 
-#include <std_msgs/ColorRGBA.h>
-#include <sensor_msgs/LaserScan.h>
-#include <cob_light/LightMode.h>
+#include <std_msgs/msg/color_rgba.hpp>
+#include <sensor_msgs/msg/laser_scan.hpp>
+#include <cob_light/msg/light_mode.hpp>
 
 #include <boost/thread.hpp>
 #include <boost/algorithm/clamp.hpp>
@@ -35,8 +35,9 @@ public:
     DistApproxMode(size_t num_leds, int priority = 0, double freq = 5, int pulses = 0, double timeout = 0)
         :Mode(priority, freq, pulses, timeout), _timer_inc(0), _num_leds(num_leds)
     {
-        ros::NodeHandle nh;
-        sub_scan = nh.subscribe("/scan_unified", 1, &DistApproxMode::scan_callback, this);
+        rclcpp::Node nh;
+        sub_scan = nh.create_subscription<sensor_msgs::msg::LaserScan>(
+            "/scan_unified", 1, std::bind(&DistApproxMode::scan_callback, this, _1));
         //use static freq for this mode
         _inc = (1. / UPDATE_RATE_HZ) * UPDATE_FREQ;
 
@@ -48,10 +49,10 @@ public:
         c_default.a = 0.1; c_default.r = 0; c_default.g = 1.0; c_default.b = 0;
     }
 
-    void scan_callback(const sensor_msgs::LaserScanConstPtr& msg)
+    void scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
     {
         boost::mutex::scoped_lock lock(mutex);
-        scan = *msg;
+        scan = *msg.get();
     }
 
     void execute()
@@ -124,9 +125,9 @@ private:
     double _inc;
     size_t _num_leds;
 
-    sensor_msgs::LaserScan scan;
+    sensor_msgs::msg::LaserScan scan;
 
-    ros::Subscriber sub_scan;
+    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::Shared_ptr sub_scan;
     boost::mutex mutex;
     color::rgba c_red;
     color::rgba c_green;

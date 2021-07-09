@@ -23,23 +23,22 @@
 #include <signal.h>
 
 // ros includes
-#include <ros/ros.h>
-#include <actionlib/server/simple_action_server.h>
-#include <diagnostic_msgs/DiagnosticArray.h>
-#include <ros/xmlrpc_manager.h>
+#include "rclcpp/rclcpp.hpp"
+#include "rclcpp_action/rclcpp_action.hpp"
+#include <diagnostic_msgs/msg/diagnostic_array.hpp>
 
 // ros message includes
-#include <std_msgs/ColorRGBA.h>
-#include <std_msgs/UInt64.h>
-#include <visualization_msgs/Marker.h>
-#include <cob_light/ColorRGBAArray.h>
-#include <cob_light/LightMode.h>
-#include <cob_light/LightModes.h>
-#include <cob_light/SetLightMode.h>
-#include <cob_light/SetLightModeAction.h>
-#include <cob_light/SetLightModeActionGoal.h>
-#include <cob_light/SetLightModeActionResult.h>
-#include <cob_light/StopLightMode.h>
+#include <std_msgs/msg/color_rgba.hpp>
+#include <std_msgs/msg/u_int64.hpp>
+#include <visualization_msgs/msg/marker.hpp>
+#include <cob_light/msg/color_rgba_array.hpp>
+#include <cob_light/msg/light_mode.hpp>
+#include <cob_light/msg/light_modes.hpp>
+#include <cob_light/srv/set_light_mode.hpp>
+#include <cob_light/msg/set_light_mode_action.hpp>
+#include <cob_light/msg/set_light_mode_action_goal.hpp>
+#include <cob_light/msg/set_light_mode_action_result.hpp>
+#include <cob_light/srv/stop_light_mode.hpp>
 
 // serial connection includes
 #include <serialIO.h>
@@ -51,28 +50,6 @@
 #include <colorOSim.h>
 #include <ms35.h>
 #include <stageprofi.h>
-
-sig_atomic_t volatile gShutdownRequest = 0;
-
-void sigIntHandler(int signal)
-{
-  ::gShutdownRequest = 1;
-}
-
-void shutdownCallback(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& result)
-{
-  int num_params = 0;
-  if (params.getType() == XmlRpc::XmlRpcValue::TypeArray)
-    num_params = params.size();
-  if (num_params > 1)
-  {
-    std::string reason = params[1];
-    ROS_WARN("Shutdown request received. Reason: [%s]", reason.c_str());
-    ::gShutdownRequest = 1; // Set flag
-  }
-
-  result = ros::xmlrpc::responseInt(1, "", 0);
-}
 
 class LightControl
 {
@@ -90,46 +67,46 @@ public:
     p_colorO = NULL;
     p_modeExecutor = NULL;
     //diagnostics
-    _pubDiagnostic = _nh.advertise<diagnostic_msgs::DiagnosticArray>("/diagnostics", 1);
-    _diagnostics_timer = _nh.createTimer(ros::Duration(1.0), &LightControl::publish_diagnostics_cb, this);
+    _pubDiagnostic = _nh.advertise<diagnostic_msgs::msg::DiagnosticArray>("/diagnostics", 1);
+    _diagnostics_timer = _nh.createTimer(rclcpp::Duration(1.0), &LightControl::publish_diagnostics_cb, this);
 
-    diagnostic_msgs::DiagnosticStatus status;
+    diagnostic_msgs::msg::DiagnosticStatus status;
     status.name = ros::this_node::getName();
 
     //Get Parameter from Parameter Server
-    _nh = ros::NodeHandle("~");
+    _nh = rclcpp::Node("~");
     if(!_nh.hasParam("invert_output"))
-      ROS_WARN("Parameter 'invert_output' is missing. Using default Value: false");
+      RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Parameter 'invert_output' is missing. Using default Value: false");
     _nh.param<bool>("invert_output", invert_output, false);
     _invertMask = (int)invert_output;
 
     if(!_nh.hasParam("devicedriver"))
-      ROS_WARN("Parameter 'devicedriver' is missing. Using default Value: cob_ledboard");
+      RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Parameter 'devicedriver' is missing. Using default Value: cob_ledboard");
     _nh.param<std::string>("devicedriver",_deviceDriver,"cob_ledboard");
 
     if(!_nh.hasParam("devicestring"))
-      ROS_WARN("Parameter 'devicestring' is missing. Using default Value: /dev/ttyLed");
+      RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Parameter 'devicestring' is missing. Using default Value: /dev/ttyLed");
     _nh.param<std::string>("devicestring",_deviceString,"/dev/ttyLed");
 
     if(!_nh.hasParam("baudrate"))
-      ROS_WARN("Parameter 'baudrate' is missing. Using default Value: 230400");
+      RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Parameter 'baudrate' is missing. Using default Value: 230400");
     _nh.param<int>("baudrate",_baudrate,230400);
 
     if(!_nh.hasParam("pubmarker"))
-      ROS_WARN("Parameter 'pubmarker' is missing. Using default Value: true");
+      RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Parameter 'pubmarker' is missing. Using default Value: true");
     _nh.param<bool>("pubmarker",_bPubMarker,true);
 
     if(!_nh.hasParam("marker_frame"))
-      ROS_WARN("Parameter 'marker_frame' is missing. Using default Value: /base_link");
+      RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Parameter 'marker_frame' is missing. Using default Value: /base_link");
     _nh.param<std::string>("marker_frame",_sMarkerFrame,"base_link");
 
     if(!_nh.hasParam("sim_enabled"))
-      ROS_WARN("Parameter 'sim_enabled' is missing. Using default Value: false");
+      RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Parameter 'sim_enabled' is missing. Using default Value: false");
     _nh.param<bool>("sim_enabled", _bSimEnabled, false);
 
     if(!_nh.hasParam("startup_color"))
     {
-      ROS_WARN("Parameter 'startup_color' is missing. Using default Value: off");
+      RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Parameter 'startup_color' is missing. Using default Value: off");
       _color.r=0;_color.g=0;_color.b=0;_color.a=0;
     }
     else
@@ -145,11 +122,11 @@ public:
     }
 
     if(!_nh.hasParam("startup_mode"))
-      ROS_WARN("Parameter 'startup_mode' is missing. Using default Value: None");
+      RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Parameter 'startup_mode' is missing. Using default Value: None");
     _nh.param<std::string>("startup_mode", startup_mode, "None");
 
     if(!_nh.hasParam("num_leds"))
-	    ROS_WARN("Parameter 'num_leds' is missing. Using default Value: 58");
+	    RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Parameter 'num_leds' is missing. Using default Value: 58");
  	  _nh.param<int>("num_leds", _num_leds, 58);
 
     int led_offset;
@@ -165,19 +142,21 @@ public:
     _srvStopMode = _nh.advertiseService("stop_mode", &LightControl::stopMode, this);
 
     //Start light mode Action Server
+    _as = rclcpp_action::create_server<cob_light::action::SetLightMode>(this, "set_light",
+                                                                  std::bind(&LightControl::actionCallback))
     _as = new ActionServer(_nh, "set_light", boost::bind(&LightControl::actionCallback, this, _1), false);
     _as->start();
 
     //Advertise visualization marker topic
-    _pubMarker = _nh.advertise<visualization_msgs::Marker>("marker",1);
+    _pubMarker = _nh.advertise<visualization_msgs::msg::Marker>("marker",1);
 
     if(!_bSimEnabled)
     {
       //open serial port
-      ROS_INFO("Open Port on %s",_deviceString.c_str());
+      RCLCPP_INFO(rclcpp::get_logger("CobLight"), "Open Port on %s",_deviceString.c_str());
       if(_serialIO.openPort(_deviceString, _baudrate) != -1)
       {
-        ROS_INFO("Serial connection on %s succeeded.", _deviceString.c_str());
+        RCLCPP_INFO(rclcpp::get_logger("CobLight"), "Serial connection on %s succeeded.", _deviceString.c_str());
         status.level = 0;
         status.message = "light controller running";
 
@@ -199,14 +178,14 @@ public:
         {
           status.level = 3;
           status.message = "Initializing connection to driver failed";
-          ROS_ERROR("Initializing connection to driver failed. Exiting");
+          RCLCPP_ERROR(rclcpp::get_logger("CobLight"), "Initializing connection to driver failed. Exiting");
           ret = false;
         }
       }
       else
       {
-        ROS_WARN("Serial connection on %s failed.", _deviceString.c_str());
-        ROS_WARN("Simulation mode enabled");
+        RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Serial connection on %s failed.", _deviceString.c_str());
+        RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Simulation mode enabled");
         p_colorO = new ColorOSim(&_nh);
         p_colorO->setNumLeds(_num_leds);
 
@@ -216,7 +195,7 @@ public:
     }
     else
     {
-      ROS_INFO("Simulation mode enabled");
+      RCLCPP_INFO(rclcpp::get_logger("CobLight"), "Simulation mode enabled");
       p_colorO = new ColorOSim(&_nh);
       p_colorO->setNumLeds(_num_leds);
       status.level = 0;
@@ -233,7 +212,7 @@ public:
 
     p_modeExecutor = new ModeExecutor(p_colorO);
 
-    boost::shared_ptr<Mode> mode = ModeFactory::create(startup_mode, _color);
+    std::shared_ptr<Mode> mode = ModeFactory::create(startup_mode, _color);
     if(mode == NULL)
     {
       p_colorO->setColor(_color);
@@ -257,7 +236,7 @@ public:
     }
   }
 
-  void topicCallback(cob_light::ColorRGBAArray color)
+  void topicCallback(cob_light::msg::ColorRGBAArray color)
   {
       boost::mutex::scoped_lock lock(_mutex);
       if(p_modeExecutor->getExecutingPriority() <= _topic_priority)
@@ -281,7 +260,7 @@ public:
                           colors.push_back(_color);
                         }
                         else
-                          ROS_ERROR("Unsupported Color format. rgba values range is between 0.0 - 1.0");
+                          RCLCPP_ERROR(rclcpp::get_logger("CobLight"), "Unsupported Color format. rgba values range is between 0.0 - 1.0");
                     }
                     p_colorO->setColorMulti(colors);
                   }
@@ -300,20 +279,20 @@ public:
                       p_colorO->setColor(_color);
                   }
                   else
-                    ROS_ERROR("Unsupported Color format. rgba values range is between 0.0 - 1.0");
+                    RCLCPP_ERROR(rclcpp::get_logger("CobLight"), "Unsupported Color format. rgba values range is between 0.0 - 1.0");
               }
           }
           else
-            ROS_ERROR("Empty color msg received");
+            RCLCPP_ERROR(rclcpp::get_logger("CobLight"), "Empty color msg received");
         }
   }
 
-  bool serviceCallback(cob_light::SetLightMode::Request &req, cob_light::SetLightMode::Response &res)
+  bool serviceCallback(cob_light::srv::SetLightMode::Request &req, cob_light::srv::SetLightMode::Response &res)
   {
     boost::mutex::scoped_lock lock(_mutex);
     bool ret = false;
 
-    //ROS_DEBUG("Service Callback [Mode: %i with prio: %i freq: %f timeout: %f pulses: %i ] [R: %f with G: %f B: %f A: %f]",
+    //RCLCPP_DEBUG(rclcpp::get_logger("CobLight"), "Service Callback [Mode: %i with prio: %i freq: %f timeout: %f pulses: %i ] [R: %f with G: %f B: %f A: %f]",
     //	req.mode.mode, req.mode.priority, req.mode.frequency, req.mode.timeout, req.mode.pulses,req.mode.color.r,req.mode.color.g ,req.mode.color.b,req.mode.color.a);
     if(req.mode.colors.size() > 0)
     {
@@ -323,9 +302,9 @@ public:
           res.active_mode = p_modeExecutor->getExecutingMode();
           res.active_priority = p_modeExecutor->getExecutingPriority();
           res.track_id = -1;
-          ROS_ERROR("Unsupported Color format. rgba values range is between 0.0 - 1.0");
+          RCLCPP_ERROR(rclcpp::get_logger("CobLight"), "Unsupported Color format. rgba values range is between 0.0 - 1.0");
         }
-        else if(req.mode.mode == cob_light::LightModes::NONE) //refactor this
+        else if(req.mode.mode == cob_light::msg::LightModes::NONE) //refactor this
         {
           p_modeExecutor->stop();
           _color.a = 0;
@@ -347,10 +326,10 @@ public:
     return ret;
   }
 
-  void actionCallback(const cob_light::SetLightModeGoalConstPtr &goal)
+  void actionCallback(const cob_light::msg::SetLightModeGoal::ConstSharedPtr &goal)
   {
     boost::mutex::scoped_lock lock(_mutex);
-    cob_light::SetLightModeResult result;
+    cob_light::msg::SetLightModeResult result;
     if(goal->mode.colors.size() > 0)
     {
         if(goal->mode.colors[0].r > 1.0 || goal->mode.colors[0].g > 1.0 ||
@@ -361,9 +340,9 @@ public:
           result.track_id = -1;
           _as->setAborted(result, "Unsupported Color format. rgba values range is between 0.0 - 1.0");
 
-          ROS_ERROR("Unsupported Color format. rgba values range is between 0.0 - 1.0");
+          RCLCPP_ERROR(rclcpp::get_logger("CobLight"), "Unsupported Color format. rgba values range is between 0.0 - 1.0");
         }
-        else if(goal->mode.mode == cob_light::LightModes::NONE)
+        else if(goal->mode.mode == cob_light::msg::LightModes::NONE)
         {
           p_modeExecutor->stop();
           _color.a = 0;
@@ -386,7 +365,7 @@ public:
         _as->setAborted(result, "No color available");
   }
 
-  bool stopMode(cob_light::StopLightMode::Request &req, cob_light::StopLightMode::Response &res)
+  bool stopMode(cob_light::srv::StopLightMode::Request &req, cob_light::srv::StopLightMode::Response &res)
   {
       boost::mutex::scoped_lock lock(_mutex);
       bool ret = false;
@@ -398,21 +377,21 @@ public:
       return ret;
   }
 
-  void publish_diagnostics_cb(const ros::TimerEvent&)
+  void publish_diagnostics_cb(const rclcpp::TimerEvent&)
   {
-    _diagnostics.header.stamp = ros::Time::now();
+    _diagnostics.header.stamp = rclcpp::Time::now();
     _pubDiagnostic.publish(_diagnostics);
   }
 
   void markerCallback(color::rgba color)
   {
-    visualization_msgs::Marker marker;
+    visualization_msgs::msg::Marker marker;
     marker.header.frame_id = _sMarkerFrame;
-    marker.header.stamp = ros::Time();
+    marker.header.stamp = rclcpp::Time();
     marker.ns = "color";
     marker.id = 0;
-    marker.type = visualization_msgs::Marker::SPHERE;
-    marker.action = visualization_msgs::Marker::ADD;
+    marker.type = visualization_msgs::msg::Marker::SPHERE;
+    marker.action = visualization_msgs::msg::Marker::ADD;
     marker.pose.position.x = 0.5;
     marker.pose.position.y = 0.0;
     marker.pose.position.z = 0.0;
@@ -442,19 +421,18 @@ private:
 
   int _topic_priority;
 
-  ros::NodeHandle _nh;
+  rclcpp::Node _nh;
   ros::Subscriber _sub;
   ros::Subscriber _sub_mode;
   ros::Publisher _pubMarker;
   ros::ServiceServer _srvServer;
   ros::ServiceServer _srvStopMode;
 
-  diagnostic_msgs::DiagnosticArray _diagnostics;
+  diagnostic_msgs::msg::DiagnosticArray _diagnostics;
   ros::Publisher _pubDiagnostic;
-  ros::Timer _diagnostics_timer;
+  rclcpp::Timer _diagnostics_timer;
 
-  typedef actionlib::SimpleActionServer<cob_light::SetLightModeAction> ActionServer;
-  ActionServer *_as;
+  rclcpp_action::Server<cob_light_action::action::SetLightMode>::SharedPtr _as;
 
   color::rgba _color;
 
@@ -484,7 +462,7 @@ int main(int argc, char** argv)
 
     while (!gShutdownRequest)
     {
-      ros::Duration(0.05).sleep();
+      rclcpp::Duration(0.05).sleep();
     }
 
     delete lightControl;

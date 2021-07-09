@@ -16,7 +16,7 @@
  
 
 #include <stageprofi.h>
-#include <ros/ros.h>
+#include "rclcpp/rclcpp.hpp"
 #include <boost/cstdint.hpp>
 #include <boost/integer.hpp>
 #include <algorithm>
@@ -48,7 +48,7 @@ bool StageProfi::init()
       ret = true;
   }
   else
-    ROS_ERROR("Sending init command to stageprofi failed");
+    RCLCPP_ERROR(rclcpp::get_logger("CobLight"), "Sending init command to stageprofi failed");
   return ret;
 }
 
@@ -83,7 +83,7 @@ void StageProfi::setColor(color::rgba color)
       index += size;
     else
     {
-      ROS_ERROR("Sending color to stageprofi failed");
+      RCLCPP_ERROR(rclcpp::get_logger("CobLight"), "Sending color to stageprofi failed");
       this->recover();
       break;
     }
@@ -131,7 +131,7 @@ void StageProfi::setColorMulti(std::vector<color::rgba> &colors)
       index += size;
     else
     {
-      ROS_ERROR("Sending color to stageprofi failed");
+      RCLCPP_ERROR(rclcpp::get_logger("CobLight"), "Sending color to stageprofi failed");
       this->recover();
       break;
     }
@@ -165,7 +165,7 @@ bool StageProfi::sendDMX(uint16_t start, const char* buf, unsigned int length)
 
 bool StageProfi::recover()
 {
-  ROS_WARN("Trying to recover stagedriver");
+  RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Trying to recover stagedriver");
   if(_serialIO->recover() && this->init())
     return true;
   else

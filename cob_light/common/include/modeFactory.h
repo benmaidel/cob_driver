@@ -20,8 +20,8 @@
 
 #include <mode.h>
 #include <iColorO.h>
-#include <cob_light/SetLightMode.h>
-#include <cob_light/LightModes.h>
+#include <cob_light/srv/set_light_mode.hpp>
+#include <cob_light/msg/light_modes.hpp>
 #include <boost/shared_ptr.hpp>
 
 class ModeFactory
@@ -30,7 +30,7 @@ public:
 	ModeFactory();
 	~ModeFactory();
 
-	static boost::shared_ptr<Mode> create(cob_light::LightMode requestMode, IColorO* colorO);
+	static boost::shared_ptr<Mode> create(cob_light::msg::LightMode requestMode, IColorO* colorO);
 	static boost::shared_ptr<Mode> create(std::string mode, color::rgba color);
 
 	static int type(Mode *mode);

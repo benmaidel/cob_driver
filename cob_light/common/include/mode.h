@@ -18,7 +18,7 @@
 #ifndef MODE_H
 #define MODE_H
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <colorUtils.h>
 #include <boost/signals2.hpp>
 #include <boost/thread.hpp>
@@ -160,11 +160,11 @@ private:
 protected:
     virtual void run()
     {
-        ros::Rate r(UPDATE_RATE_HZ);
+        rclcpp::Rate r(UPDATE_RATE_HZ);
 
-        ros::Time timeStart = ros::Time::now();
+        rclcpp::Time timeStart = rclcpp::Clock::now();
 
-        while(!isStopRequested() && !ros::isShuttingDown())
+        while(!isStopRequested() && rclcpp::ok())
         {
             while(isPauseRequested())
             {
@@ -179,13 +179,13 @@ protected:
 
             if(this->getTimeout() != 0)
             {
-                ros::Duration timePassed = ros::Time::now() - timeStart;
-                if(timePassed.toSec() >= this->getTimeout())
+                rclcpp::Duration timePassed = rclcpp::Clock::now() - timeStart;
+                if(timePassed.seconds() >= this->getTimeout())
                     break;
             }
             r.sleep();
         }
-        ROS_DEBUG("Mode %s finished",this->getName().c_str());
+        RCLCPP_DEBUG(rclcpp::get_logger("CobLight"), "Mode %s finished",this->getName().c_str());
         if(!isStopRequested())
             m_sigFinished(this->getPriority());
     }

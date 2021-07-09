@@ -1,47 +1,24 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.5)
 project(cob_light)
 
-add_compile_options(-std=c++11)
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
-find_package(catkin REQUIRED COMPONENTS actionlib actionlib_msgs diagnostic_msgs message_generation roscpp sensor_msgs std_msgs visualization_msgs)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
-find_package(Boost REQUIRED COMPONENTS thread)
+find_package(rosidl_default_generators REQUIRED)
+find_package(ament_cmake REQUIRED)
+find_package(diagnostic_msgs REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
-### Message Generation ###
-add_message_files(
-  FILES
-  ColorRGBAArray.msg
-  LightMode.msg
-  LightModes.msg
-  Sequence.msg
-)
-
-add_service_files(
-  FILES
-  SetLightMode.srv
-  StopLightMode.srv
-)
-
-add_action_files(
-  FILES
-  SetLightMode.action
-)
-
-generate_messages(
-  DEPENDENCIES actionlib_msgs sensor_msgs std_msgs visualization_msgs
-)
-
-catkin_package(
-  CATKIN_DEPENDS actionlib actionlib_msgs diagnostic_msgs message_runtime roscpp sensor_msgs std_msgs visualization_msgs
-)
-
-### BUILD ###
-#pkg_check_modules(GTKMM REQUIRED gtkmm-3.0)
-#pkg_check_modules(GTHREAD REQUIRED gthread-2.0)
-
-add_compile_options(-Wno-narrowing)
-
-include_directories(${PROJECT_SOURCE_DIR}/ros/include ${PROJECT_SOURCE_DIR}/common/include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 set(HEADERS
     ${PROJECT_SOURCE_DIR}/common/include/breathColorMode.h
     ${PROJECT_SOURCE_DIR}/common/include/breathMode.h
@@ -66,24 +43,29 @@ set(HEADERS
     ${PROJECT_SOURCE_DIR}/ros/include/stageprofi.h
 )
 
+### Message Generation ###
 
-add_executable(${PROJECT_NAME} common/src/modeExecutor.cpp common/src/modeFactory.cpp common/src/serialIO.cpp ros/src/${PROJECT_NAME}.cpp ros/src/colorO.cpp ros/src/colorOSim.cpp ros/src/ms35.cpp ros/src/stageprofi.cpp)
-add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+rosidl_generate_interfaces(${PROJECT_NAME}
+    msg/LightModes.msg
+    msg/ColorRGBAArray.msg
+    msg/LightMode.msg
+    msg/Sequence.msg
+    srv/SetLightMode.srv
+    srv/StopLightMode.srv
+    action/SetLightMode.action
+    DEPENDENCIES std_msgs 
+)
+
+include_directories(${PROJECT_SOURCE_DIR}/ros/include ${PROJECT_SOURCE_DIR}/common/include)
+
+add_executable(light_node common/src/modeExecutor.cpp common/src/modeFactory.cpp common/src/serialIO.cpp ros/src/light_node.cpp ros/src/colorO.cpp ros/src/colorOSim.cpp ros/src/ms35.cpp ros/src/stageprofi.cpp)
+ament_target_dependencies(light_node "std_msgs" "rclcpp" "rclcpp_action" "sensor_msgs" "visualization_msgs" "diagnostic_msgs")
+rosidl_target_interfaces(light_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 ### INSTALL ###
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+install(TARGETS
+  light_node
+  DESTINATION lib/${PROJECT_NAME}
 )
 
-catkin_install_python(PROGRAMS
-  ros/scripts/test.py
-  ros/scripts/test_sprofi_circle.py
-  ros/scripts/test_sprofi_modes.py
-  ros/scripts/test_sprofi_part.py
-  ros/scripts/light_action_test.py
-  ros/scripts/light_service_test.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+ament_package()

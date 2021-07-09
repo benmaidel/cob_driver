@@ -22,12 +22,12 @@
 
 #include <serialIO.h>
 #include <colorUtils.h>
-#include <ros/ros.h>
+#include "rclcpp/rclcpp.hpp"
 
 class ColorOSim : public IColorO
 {
 public:
-  ColorOSim(ros::NodeHandle* nh);
+  ColorOSim(rclcpp::Node* nh);
   virtual ~ColorOSim();
 
   bool init();
@@ -35,7 +35,7 @@ public:
   void setColorMulti(std::vector<color::rgba> &colors);
 
 private:
-  ros::NodeHandle* p_nh;
+  rclcpp::Node* p_nh;
   ros::Publisher _pubSimulation;
   ros::Publisher _pubSimulationMulti;
 };

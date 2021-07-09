@@ -16,7 +16,7 @@
  
 
 #include <colorO.h>
-#include <ros/ros.h>
+#include "rclcpp/rclcpp.hpp"
 
 ColorO::ColorO(SerialIO* serialIO)
 {
@@ -62,11 +62,11 @@ void ColorO::setColor(color::rgba color)
   bytes_wrote = _serialIO->sendData(_ssOut.str());
   if(bytes_wrote == -1)
   {
-    ROS_WARN("Can not write to serial port. Port closed!");
+    RCLCPP_WARN(rclcpp::get_logger("CobLight"), "Can not write to serial port. Port closed!");
   }
   else
   {
-    ROS_DEBUG("Wrote [%s] with %i bytes from %i bytes", \
+    RCLCPP_DEBUG(rclcpp::get_logger("CobLight"), "Wrote [%s] with %i bytes from %i bytes", \
               _ssOut.str().c_str(), bytes_wrote, (int)_ssOut.str().length());
     m_sigColorSet(color_tmp);
   }

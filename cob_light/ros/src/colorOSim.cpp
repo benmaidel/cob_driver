@@ -15,14 +15,14 @@
  */
 
 #include <colorOSim.h>
-#include <std_msgs/ColorRGBA.h>
-#include <cob_light/ColorRGBAArray.h>
+#include <std_msgs/msg/color_rgba.hpp>
+#include <cob_light/msg/color_rgba_array.hpp>
 
-ColorOSim::ColorOSim(ros::NodeHandle* nh)
+ColorOSim::ColorOSim(rclcpp::Node* nh)
 {
   p_nh = nh;
-  _pubSimulation = p_nh->advertise<std_msgs::ColorRGBA>("debug",2);
-  _pubSimulationMulti = p_nh->advertise<cob_light::ColorRGBAArray>("debugMulti", 2);
+  _pubSimulation = p_nh->advertise<std_msgs::msg::ColorRGBA>("debug",2);
+  _pubSimulationMulti = p_nh->advertise<cob_light::msg::ColorRGBAArray>("debugMulti", 2);
 }
 
 ColorOSim::~ColorOSim()
@@ -36,7 +36,7 @@ bool ColorOSim::init()
 
 void ColorOSim::setColor(color::rgba color)
 {
-  std_msgs::ColorRGBA _color;
+  std_msgs::msg::ColorRGBA _color;
   _color.r = color.r;
   _color.g = color.g;
   _color.b = color.b;
@@ -48,8 +48,8 @@ void ColorOSim::setColor(color::rgba color)
 
 void ColorOSim::setColorMulti(std::vector<color::rgba> &colors)
 {
-  std_msgs::ColorRGBA color;
-  cob_light::ColorRGBAArray colorMsg;
+  std_msgs::msg::ColorRGBA color;
+  cob_light::msg::ColorRGBAArray colorMsg;
   for(size_t i = 0; i < colors.size(); ++i)
   {
     color.r = colors[i].r;

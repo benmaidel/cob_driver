@@ -32,7 +32,7 @@ public:
 	~ModeExecutor();
 
 	uint64_t execute(boost::shared_ptr<Mode> mode);
-	uint64_t execute(cob_light::LightMode requestMode);
+	uint64_t execute(cob_light::msg::LightMode requestMode);
 
 	int getExecutingPriority();
 	int getExecutingMode();
