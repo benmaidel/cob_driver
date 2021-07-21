@@ -26,14 +26,18 @@
 class Mode
 {
 public:
+    Mode(rclcpp::Node::SharedPtr node, int priority = 0, double freq = 0, int pulses = 0, double timeout = 0) :
+        _node(node), Mode(priority, freq, pulses, timeout)
+    {
+    }
     Mode(int priority = 0, double freq = 0, int pulses = 0, double timeout = 0)
         : _priority(priority), _freq(freq), _pulses(pulses), _timeout(timeout),
           _finished(false), _pulsed(0), _isStopRequested(false), _isPauseRequested(false),
           _isRunning(false)
-          {
-              if(this->getFrequency() == 0.0)
-                  this->setFrequency(1.0);
-          }
+    {
+        if(this->getFrequency() == 0.0)
+            this->setFrequency(1.0);
+    }
     virtual ~Mode(){}
 
     void start()
@@ -128,6 +132,8 @@ protected:
     boost::signals2::signal<void (color::rgba color)> m_sigColorReady;
     boost::signals2::signal<void (std::vector<color::rgba> &colors)> m_sigColorsReady;
     boost::signals2::signal<void (int)> m_sigFinished;
+
+    rclcpp::Node::SharedPtr _node;
 
 private:
     boost::shared_ptr<boost::thread> _thread;

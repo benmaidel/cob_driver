@@ -22,12 +22,15 @@
 
 #include <serialIO.h>
 #include <colorUtils.h>
+
 #include "rclcpp/rclcpp.hpp"
+#include <std_msgs/msg/color_rgba.hpp>
+#include <cob_light/msg/color_rgba_array.hpp>
 
 class ColorOSim : public IColorO
 {
 public:
-  ColorOSim(rclcpp::Node* nh);
+  ColorOSim(rclcpp::Node::SharedPtr node);
   virtual ~ColorOSim();
 
   bool init();
@@ -35,9 +38,9 @@ public:
   void setColorMulti(std::vector<color::rgba> &colors);
 
 private:
-  rclcpp::Node* p_nh;
-  ros::Publisher _pubSimulation;
-  ros::Publisher _pubSimulationMulti;
+  rclcpp::Node::SharedPtr _node;
+  rclcpp::Publisher<std_msgs::msg::ColorRGBA>::SharedPtr _pubSimulation;
+  rclcpp::Publisher<cob_light::msg::ColorRGBAArray>::SharedPtr _pubSimulationMulti;
 };
 
 #endif

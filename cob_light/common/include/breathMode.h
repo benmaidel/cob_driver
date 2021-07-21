@@ -23,8 +23,8 @@
 class BreathMode : public Mode
 {
 public:
-	BreathMode(color::rgba color, int priority = 0, double freq = 0.25, int pulses = 0, double timeout = 0)
-		:Mode(priority, freq, pulses, timeout), _timer_inc(0.0)
+	BreathMode(rclcpp::Node::SharedPtr node, color::rgba color, int priority = 0, double freq = 0.25, int pulses = 0, double timeout = 0)
+		:Mode(node, priority, freq, pulses, timeout), _timer_inc(0.0)
 	{
 		_color = color;
 		_init_color = color;

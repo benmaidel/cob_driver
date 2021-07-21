@@ -15,6 +15,7 @@
 #include <std_msgs/msg/color_rgba.hpp>
 #include <std_msgs/msg/u_int64.hpp>
 #include <visualization_msgs/msg/marker.hpp>
+#include <cob_light/action/set_light_mode.hpp>
 
 // serial connection includes
 #include <serialIO.h>
@@ -27,16 +28,17 @@
 #include <ms35.h>
 #include <stageprofi.h>
 
-class LightNode
+class LightNode : public rclcpp::Node
 {
 public:
   LightNode() :
+    Node("light_node"),
     _baudrate(0), _invertMask(0), _num_leds(0), _topic_priority(0), _bPubMarker(false), _bSimEnabled(true)
   {
   }
   bool init()
   {
-    
+
     return true;
   }
 
@@ -59,7 +61,7 @@ private:
   bool  _bPubMarker;
   bool  _bSimEnabled;
 
-  rclcpp_action::Server<cob_light_action::action::SetLightMode>::SharedPtr _as;
+  rclcpp_action::Server<cob_light::action::SetLightMode>::SharedPtr _as;
 
   color::rgba _color;
 

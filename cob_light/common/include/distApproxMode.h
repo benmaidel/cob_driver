@@ -35,7 +35,7 @@ public:
     DistApproxMode(size_t num_leds, int priority = 0, double freq = 5, int pulses = 0, double timeout = 0)
         :Mode(priority, freq, pulses, timeout), _timer_inc(0), _num_leds(num_leds)
     {
-        rclcpp::Node nh;
+        auto nh = rclcpp::Node::make_shared("dist_approx_mode");
         sub_scan = nh.create_subscription<sensor_msgs::msg::LaserScan>(
             "/scan_unified", 1, std::bind(&DistApproxMode::scan_callback, this, _1));
         //use static freq for this mode
@@ -127,7 +127,7 @@ private:
 
     sensor_msgs::msg::LaserScan scan;
 
-    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::Shared_ptr sub_scan;
+    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr sub_scan;
     boost::mutex mutex;
     color::rgba c_red;
     color::rgba c_green;

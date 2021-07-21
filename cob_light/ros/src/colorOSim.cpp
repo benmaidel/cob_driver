@@ -15,14 +15,12 @@
  */
 
 #include <colorOSim.h>
-#include <std_msgs/msg/color_rgba.hpp>
-#include <cob_light/msg/color_rgba_array.hpp>
 
-ColorOSim::ColorOSim(rclcpp::Node* nh)
+ColorOSim::ColorOSim(rclcpp::Node::SharedPtr node) :
+  node_(node)
 {
-  p_nh = nh;
-  _pubSimulation = p_nh->advertise<std_msgs::msg::ColorRGBA>("debug",2);
-  _pubSimulationMulti = p_nh->advertise<cob_light::msg::ColorRGBAArray>("debugMulti", 2);
+  _pubSimulation = node->create_publisher<std_msgs::msg::ColorRGBA>("debug", 2);
+  _pubSimulationMulti = node->create_publisher<cob_light::msg::ColorRGBAArray>("debugMulti", 2);
 }
 
 ColorOSim::~ColorOSim()
@@ -42,7 +40,7 @@ void ColorOSim::setColor(color::rgba color)
   _color.b = color.b;
   _color.a = color.a;
 
-  _pubSimulation.publish(_color);
+  _pubSimulation->publish(_color);
   m_sigColorSet(color);
 }
 
@@ -59,6 +57,6 @@ void ColorOSim::setColorMulti(std::vector<color::rgba> &colors)
     colorMsg.colors.push_back(color);
   }
 
-  _pubSimulationMulti.publish(colorMsg);
+  _pubSimulationMulti->publish(colorMsg);
   m_sigColorSet(colors[0]);
 }
